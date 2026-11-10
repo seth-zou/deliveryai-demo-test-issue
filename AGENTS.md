@@ -9,6 +9,11 @@
 
 主流程视图状态机：`home → welcome → menu → order → checkout`。视图经 hash 路由与 URL 一一对应（`#/home`、`#/welcome`、`#/menu`、`#/order`、`#/checkout`），支持深链接与浏览器前进/后退；选用 hash 模式（非 History 模式）以兼容 Vite `base './'` 与 GitHub Pages 子路径部署。
 
+运行时入口补充：
+
+- 预览态：访问 `?preview=menu` 会预置示例桌台 A08 与 1 件带规格文案的购物车商品，并直接进入 `menu` 视图（`src/App.tsx#createInitialState`）。
+- 深链接：以 `#/welcome`、`#/menu`、`#/order`、`#/checkout` 直接打开时自动绑定示例桌台 A08；`#/home` 无需桌台。非法 hash 或未绑定桌台时的不可达视图会回落到 `home`（`src/hooks/useViewRoute.ts`）。URL 中的端口以 Vite 启动日志为准，不要在文档或脚本中硬编码。
+
 ## 技术栈
 
 React 18 · TypeScript ~5.6 · Vite 6 · Tailwind CSS 3.4 · Radix UI（Dialog）· lucide-react · class-variance-authority · i18next（中/英）· Playwright（E2E）。状态用 `useReducer` 内存态管理；ESM；路径别名 `@` → `src/`。
@@ -27,7 +32,17 @@ src/
 ├── hooks/useElderlyMode.ts# 老人模式：localStorage + html.elderly
 ├── hooks/useViewRoute.ts  # 视图 ↔ URL hash 双向同步（含深链接/非法地址纠正）
 ├── lib/utils.ts           # cn（类名合并）、money（¥ 格式化）
-├── components/            # 页面组件（HomeView/WelcomeView/MenuView/OrderView/CheckoutView 对应各视图）；通用件在 components/ui/（button、dialog）
+├── components/
+│   ├── HomeView.tsx       # 首页：选择/绑定桌台
+│   ├── WelcomeView.tsx    # 入座欢迎页，进入点餐
+│   ├── MenuView.tsx       # 菜单浏览、搜索、筛选与加购
+│   ├── OrderView.tsx      # 已下订单、履约进度与加菜/退菜
+│   ├── CheckoutView.tsx   # 结账与支付成功态
+│   ├── TopBar.tsx         # 顶部栏：桌台、导航、服务、会员、语言与老人模式入口
+│   ├── CartPanel.tsx      # 购物车面板：数量调整、金额汇总与提交订单
+│   ├── ServiceSheet.tsx   # 服务呼叫面板：加汤、饮料、餐具、结账及服务记录
+│   ├── DemoConsole.tsx    # 演示控制台：履约阶段、服务响应、售罄与重置
+│   └── ui/                # 通用件：button（CVA Button）、dialog（Radix Dialog 封装）
 └── assets/                # hotpot/broth/beef/vegetables 图片
 e2e/super-spicy.spec.ts    # 超级辣风险提示 E2E 验收
 e2e/view-routing.spec.ts   # 视图 URL hash 路由 E2E 验收
@@ -62,6 +77,12 @@ playwright.config.ts       # E2E 配置
 - 需要在 React 挂载前设置 html 属性/class 时，扩展 `index.html` 的内联脚本。
 - npm 源默认走 `https://registry.npmmirror.com`（见根目录与 `server/.npmrc`）。
 
+### 同步维护规则
+
+1. 新增或重命名视图时，同步修改 `src/types.ts` 的 `ViewName`、`src/hooks/useViewRoute.ts` 的 `VIEWS`、对应 `src/components/*View.tsx`，以及本文件「目录结构」。
+2. 新增 `localStorage` key 时，读写必须 `try/catch` 降级，并把 key 与取值写入本文件「编码约定」的现有 key 列表。
+3. 新增或修改 npm script、环境变量、E2E 配置或发布工作流时，同步更新本文件「验证命令」，并检查 `docs/agent-testing.md`、`docs/agent-release.md` 是否需同步。
+
 ## 验证命令
 
 | 命令 | 作用 |
@@ -72,7 +93,11 @@ playwright.config.ts       # E2E 配置
 | `npx tsc -b --noEmit` | 仅类型检查 |
 | `npx playwright test` | E2E，webServer 自动拉起 `npm run dev` |
 
-E2E 的执行约束（浏览器来源、报告路径、批量修复、不重跑等）与用例编写/自审规范见 [docs/agent-testing.md](docs/agent-testing.md)。
+包管理器以 npm 为准：CI 使用 `npm ci`，仓库脚本通过 `npm run *` 执行。仓库内虽同时存在 `pnpm-lock.yaml`、`pnpm-workspace.yaml`，但它们不是本仓的安装或验证入口，不要用 pnpm 替代。
+
+E2E 浏览器由环境预装，`playwright.config.ts` 通过 `PLAYWRIGHT_CHROMIUM_PATH` 指定可执行文件（未设置时回退 `/opt/chromium.org/chromium/chrome`）；**禁止执行 `npx playwright install`**，浏览器缺失时改用环境变量指向已有的 Chrome。端口默认 `5173`，可用 `PLAYWRIGHT_PORT` 覆盖。E2E 的执行约束（报告路径、批量修复、不重跑等）与用例编写/自审规范见 [docs/agent-testing.md](docs/agent-testing.md)。
+
+GitHub Pages 发布由 `.github/workflows/deploy-pages.yml` 负责：push 到 `main`（或手动 `workflow_dispatch`）触发，只执行 `npm ci` + `npm run build` 并发布 `dist`，CI 不跑 E2E；线上核验步骤见 [docs/agent-release.md](docs/agent-release.md)。
 
 ## 不要做
 
@@ -80,3 +105,5 @@ E2E 的执行约束（浏览器来源、报告路径、批量修复、不重跑�
 - 不使用 CSS Modules 或 styled-components。
 - 不修改 `server/`（仅健康检查，无业务逻辑）。
 - 不引入后端 API 调用，所有数据为前端内存态。
+- 不执行 `playwright install` / `npx playwright install`；使用环境预装的浏览器并通过 `PLAYWRIGHT_CHROMIUM_PATH` 指定路径。
+- 不使用 pnpm 安装依赖或执行验证命令；以 npm 与 `package-lock.json` 为准。
