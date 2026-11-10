@@ -91,7 +91,17 @@ export default function App() {
   }
 
   if (state.view === 'welcome') {
-    return <WelcomeView table={state.table!} onEnter={() => dispatch({ type: 'SET_VIEW', view: 'menu' })} />
+    return (
+      <WelcomeView
+        table={state.table!}
+        language={i18n.language}
+        elderly={elderly}
+        onEnter={() => dispatch({ type: 'SET_VIEW', view: 'menu' })}
+        onBack={() => dispatch({ type: 'UNBIND_TABLE' })}
+        onToggleLanguage={toggleLanguage}
+        onToggleElderly={handleToggleElderly}
+      />
+    )
   }
 
   return (

@@ -46,6 +46,7 @@ src/
 └── assets/                # hotpot/broth/beef/vegetables 图片
 e2e/super-spicy.spec.ts    # 超级辣风险提示 E2E 验收
 e2e/view-routing.spec.ts   # 视图 URL hash 路由 E2E 验收
+e2e/welcome-view.spec.ts   # 欢迎页入口/返回选桌/偏好保持 E2E 验收
 e2e/readme-bilingual.spec.ts # 中英文 README 链接与内容一致性 E2E 验收
 e2e/agents-md.spec.ts      # 本文件仓库事实校准 E2E 验收
 index.html                 # 入口，含初始化语言的内联脚本

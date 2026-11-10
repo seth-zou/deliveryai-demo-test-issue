@@ -37,6 +37,8 @@ const resources = {
         aria_member: '会员与排号',
         aria_console: '演示控制台',
         aria_lang: '切换语言',
+        aria_elderly_on: '切换至老人模式',
+        aria_elderly_off: '切换至常规模式',
         aria_close: '关闭',
         aria_reduce: '减少',
         aria_increase: '增加',
@@ -68,6 +70,7 @@ const resources = {
         title: '欢迎光临沸点！',
         you_at: '您在',
         enter: '进入点餐',
+        back: '返回选桌',
         img_alt: '热气腾腾的火锅',
       },
       menu: {
@@ -275,6 +278,8 @@ const resources = {
         aria_member: 'Membership & Queue',
         aria_console: 'Demo Console',
         aria_lang: 'Switch language',
+        aria_elderly_on: 'Turn on elderly mode',
+        aria_elderly_off: 'Turn off elderly mode',
         aria_close: 'Close',
         aria_reduce: 'Decrease',
         aria_increase: 'Increase',
@@ -306,6 +311,7 @@ const resources = {
         title: 'Welcome to Boiling Point!',
         you_at: 'You are at',
         enter: 'Start Ordering',
+        back: 'Change table',
         img_alt: 'Steaming hotpot',
       },
       menu: {
