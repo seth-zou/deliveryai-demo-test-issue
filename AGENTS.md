@@ -5,14 +5,14 @@
 
 ## 项目概述
 
-沸点火锅点单与门店履约概念演示应用（`hdl-order-demo`）。React SPA，业务逻辑全部在浏览器内存中运行，不依赖后端 API。`server/` 仅为可选的健康检查 Express 应用，不参与核心链路。
+沸点火锅点单与门店履约概念演示应用（`hdl-order-demo`）。React SPA，业务逻辑全部在浏览器内存中运行，不依赖后端 API。`server/` 仅为可选的健康检查 Express 应用（`server/src/index.ts` 提供 `GET /ping`，监听端口 3001），不参与核心链路。
 
 主流程视图状态机：`home → welcome → menu → order → checkout`。视图经 hash 路由与 URL 一一对应（`#/home`、`#/welcome`、`#/menu`、`#/order`、`#/checkout`），支持深链接与浏览器前进/后退；选用 hash 模式（非 History 模式）以兼容 Vite `base './'` 与 GitHub Pages 子路径部署。
 
 运行时入口补充：
 
-- 预览态：访问 `?preview=menu` 会预置示例桌台 A08 与 1 件带规格文案的购物车商品，并直接进入 `menu` 视图（`src/App.tsx#createInitialState`）。
-- 深链接：以 `#/welcome`、`#/menu`、`#/order`、`#/checkout` 直接打开时自动绑定示例桌台 A08；`#/home` 无需桌台。非法 hash 或未绑定桌台时的不可达视图会回落到 `home`（`src/hooks/useViewRoute.ts`）。URL 中的端口以 Vite 启动日志为准，不要在文档或脚本中硬编码。
+- 预览态：在应用根地址后追加 `?preview=menu`（如 `http://localhost:<port>/?preview=menu`，端口以 Vite 启动日志为准）会预置 A08 桌台、`products[2]`（`p3`「琥珀嫩牛肉」）1 件购物车商品，规格由 `menu.option.full` · `menu.option.original` 组成（显示为「整份 · 原味」），下单人 `姚乾`，并进入 `menu` 视图；`createInitialState` 先判断 preview，因此预览态优先于 hash（如 `?preview=menu#/order` 会进入 `#/menu`）。
+- 深链接：首次直接打开 `#/welcome`、`#/menu`、`#/order`、`#/checkout` 时，`createInitialState` 依据 `initialViewFromHash` 自动绑定 A08；`#/home` 无需桌台。挂载后 `useViewRoute` 校验运行中的 hash 变化（浏览器前进/后退或手动改 hash）：`App.tsx` 的 `canView` 仅允许 `home` 或已绑定桌台的视图可达，未绑定桌台时其余视图不可达；非法/不可达 hash 由 `history.replaceState` 纠正并回落到 `home`。首次加载遇到无效 hash 也用 `history.replaceState` 规范化地址，不新增历史记录。
 
 ## 技术栈
 
@@ -39,19 +39,28 @@ src/
 │   ├── OrderView.tsx      # 已下订单、履约进度与加菜/退菜
 │   ├── CheckoutView.tsx   # 结账与支付成功态
 │   ├── TopBar.tsx         # 顶部栏：桌台、导航、服务、会员、语言与老人模式入口
-│   ├── CartPanel.tsx      # 购物车面板：数量调整、金额汇总与提交订单
+│   ├── CartPanel.tsx      # 购物车面板：桌面侧栏与移动弹窗共用 compact 形态，数量调整、金额汇总与提交订单
 │   ├── ServiceSheet.tsx   # 服务呼叫面板：加汤、饮料、餐具、结账及服务记录
 │   ├── DemoConsole.tsx    # 演示控制台：履约阶段、服务响应、售罄与重置
 │   └── ui/                # 通用件：button（CVA Button）、dialog（Radix Dialog 封装）
 └── assets/                # hotpot/broth/beef/vegetables 图片
 e2e/super-spicy.spec.ts    # 超级辣风险提示 E2E 验收
 e2e/view-routing.spec.ts   # 视图 URL hash 路由 E2E 验收
+e2e/readme-bilingual.spec.ts # 中英文 README 链接与内容一致性 E2E 验收
+e2e/agents-md.spec.ts      # 本文件仓库事实校准 E2E 验收
 index.html                 # 入口，含初始化语言的内联脚本
 tailwind.config.js         # 自定义色板；vite.config.ts 配 base './' 与 @ 别名
 playwright.config.ts       # E2E 配置
+README.md                  # 中文默认 README
+README.en.md               # 英文 README
+docs/agent-testing.md      # E2E 执行与 Review 规范
+docs/agent-release.md      # GitHub Pages 发布核验 runbook
+.github/workflows/deploy-pages.yml # push main 构建并发布 dist
 ```
 
 > 页面级视图组件统一以 `*View.tsx` 命名，文件名与视图状态一一对应（`home`→`HomeView`、`welcome`→`WelcomeView`…）。新增视图时同步：`ViewName` 类型、`useViewRoute` 的 `VIEWS`、对应 `*View.tsx` 组件。
+
+文档地图：`README.md`（中文默认版）与 `README.en.md`（英文版）面向使用者；`docs/agent-testing.md` 承载 E2E 执行/用例规范，`docs/agent-release.md` 承载 GitHub Pages 发布核验；`.github/workflows/deploy-pages.yml` 是发布工作流入口。
 
 ## 样式约定
 
@@ -79,9 +88,10 @@ playwright.config.ts       # E2E 配置
 
 ### 同步维护规则
 
-1. 新增或重命名视图时，同步修改 `src/types.ts` 的 `ViewName`、`src/hooks/useViewRoute.ts` 的 `VIEWS`、对应 `src/components/*View.tsx`，以及本文件「目录结构」。
-2. 新增 `localStorage` key 时，读写必须 `try/catch` 降级，并把 key 与取值写入本文件「编码约定」的现有 key 列表。
-3. 新增或修改 npm script、环境变量、E2E 配置或发布工作流时，同步更新本文件「验证命令」，并检查 `docs/agent-testing.md`、`docs/agent-release.md` 是否需同步。
+1. 新增或重命名视图时，同步修改 `src/types.ts` 的 `ViewName`、`src/hooks/useViewRoute.ts` 的 `VIEWS`、对应 `src/components/*View.tsx`、`src/App.tsx` 的渲染分支与布局，以及本文件「目录结构」。
+2. 新增或修改 i18n 文案时，同步更新 `src/i18n.ts` 的 zh/en 两套资源；新增 `localStorage` key 时，读写必须 `try/catch` 降级，并把 key 与取值加入本文件「编码约定」的现有 key 列表。
+3. 新增或修改 npm script、环境变量、E2E 配置或发布工作流时，同步更新本文件「验证命令」，并同步调整 `docs/agent-testing.md`、`docs/agent-release.md` 的对应说明。
+4. 新增或修改用户可见行为、路由或预览态时，同步更新 `e2e/` 下对应行为用例；凡是改变本文件所述事实的代码变更，都必须在同一个 PR 内同步更新 `AGENTS.md`。
 
 ## 验证命令
 
