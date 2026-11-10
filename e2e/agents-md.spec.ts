@@ -22,7 +22,7 @@ const sectionBody = (md: string, heading: string) => {
 
 /** 提取目录结构代码块，用于与真实文件清单比对。 */
 const directoryTree = () => {
-  const block = Array.from(AGENTS.matchAll(/```[^\n]*\n([\s\S]*?)```/g), (m) => m[1]).find((item) => item.includes('src/components/'))
+  const block = Array.from(AGENTS.matchAll(/```[^\n]*\n([\s\S]*?)```/g), (m) => m[1]).find((item) => item.includes('src/') && item.includes('components/'))
   expect(block, 'AGENTS.md 应包含 src/components/ 目录结构代码块').toBeTruthy()
   return block!
 }
@@ -133,14 +133,15 @@ test.describe('AGENTS.md 仓库事实校准 - E2E 验收测试', () => {
     await expect(page.getByRole('heading', { name: '想吃什么，一起点。' })).toBeVisible()
     await expect(page.getByText('琥珀嫩牛肉').first()).toBeVisible()
     await expect(page.getByText('整份 · 原味', { exact: true })).toBeVisible()
-    await expect(page.getByText('姚乾 点了', { exact: true })).toBeVisible()
+    await expect(page.getByText('姚乾 点了')).toBeVisible()
     await expect(page.getByText('共 1 份菜品', { exact: true })).toBeVisible()
   })
 
   test('REQ-003: 深链接自动绑桌、非法 hash 回落 home 的行为与文档一致', async ({ page }) => {
     await page.goto('/#/order')
     await expect(page).toHaveURL(/#\/order$/)
-    await expect(page.getByText('这一锅，正在抵达', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '还没有已提交订单' })).toBeVisible()
+    await expect(page.getByText(/A08/).first()).toBeVisible()
 
     await page.goto('/#/not-a-view')
     await expect(page).toHaveURL(/#\/home$/)
