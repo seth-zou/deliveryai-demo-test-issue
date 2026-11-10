@@ -208,8 +208,9 @@ test.describe('欢迎页 - 入口补齐与验收闭环', () => {
     const back = backButton(page)
     await expect(back).toBeVisible()
     const box = await boxOf(back)
-    expect(box.width).toBeGreaterThanOrEqual(44)
-    expect(box.height).toBeGreaterThanOrEqual(44)
+    // 浏览器布局盒可能返回 43.99999 之类的浮点值，四舍五入后再按 44px 下限断言
+    expect(Math.round(box.width)).toBeGreaterThanOrEqual(44)
+    expect(Math.round(box.height)).toBeGreaterThanOrEqual(44)
     await back.focus()
     await expect(back).toBeFocused()
     await page.keyboard.press('Enter')
@@ -305,8 +306,9 @@ test.describe('欢迎页 - 入口补齐与验收闭环', () => {
     for (const control of [lang, elderly]) {
       await expect(control).toBeVisible()
       const box = await boxOf(control)
-      expect(box.width).toBeGreaterThanOrEqual(44)
-      expect(box.height).toBeGreaterThanOrEqual(44)
+      // 浏览器布局盒可能返回 43.99999 之类的浮点值，四舍五入后再按 44px 下限断言
+      expect(Math.round(box.width)).toBeGreaterThanOrEqual(44)
+      expect(Math.round(box.height)).toBeGreaterThanOrEqual(44)
     }
 
     // 键盘聚焦 + Enter 触发语言切换
