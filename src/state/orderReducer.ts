@@ -28,6 +28,9 @@ export function orderReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'BIND_TABLE':
       return { ...state, table: action.table, view: 'welcome', lastMessage: i18next.t('message.bind_table', { table: action.table }) }
+    case 'UNBIND_TABLE':
+      // 返回选桌：仅解除桌台绑定，保留购物车/订单/服务等业务数据
+      return { ...state, table: null, view: 'home' }
     case 'SET_VIEW':
       return { ...state, view: action.view }
     case 'ADD_CART': {

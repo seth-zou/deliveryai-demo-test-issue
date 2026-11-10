@@ -55,6 +55,7 @@ export interface AppState {
 
 export type AppAction =
   | { type: 'BIND_TABLE'; table: string }
+  | { type: 'UNBIND_TABLE' }
   | { type: 'SET_VIEW'; view: ViewName }
   | { type: 'ADD_CART'; item: CartItem }
   | { type: 'CHANGE_QTY'; uid: string; delta: number }
